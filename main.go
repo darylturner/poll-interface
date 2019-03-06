@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func continuousPoll(s *gosnmp.GoSNMP, index *string, host *string) {
+func continuousPoll(s *gosnmp.GoSNMP, index *string, host *string, verbose *bool) {
 	ifnameoid := "1.3.6.1.2.1.31.1.1.1.1." + *index
 	oids := []string{"1.3.6.1.2.1.31.1.1.1.6.", "1.3.6.1.2.1.31.1.1.1.10."}
 	for i, _ := range oids {
@@ -40,12 +40,22 @@ func continuousPoll(s *gosnmp.GoSNMP, index *string, host *string) {
 			idelta = float64(iraw - iprev)
 			odelta = float64(oraw - oprev)
 
-			fmt.Printf(
-				"%v %v - in: %.3f mbps / out: %.3f mbps\n",
-				*host, ifname,
-				idelta*8/10/1e6,
-				odelta*8/10/1e6,
-			)
+			if !*verbose {
+				fmt.Printf(
+					"%v %v - in: %.3f mbps / out: %.3f mbps\n",
+					*host, ifname,
+					idelta*8/10/1e6,
+					odelta*8/10/1e6,
+				)
+			} else {
+				fmt.Printf(
+					"%v %v - in: %.3f mbps / out: %.3f mbps\niprev=%v, iraw=%v, oprev=%v, oraw=%v\n\n",
+					*host, ifname,
+					idelta*8/10/1e6,
+					odelta*8/10/1e6,
+					iprev, iraw, oprev, oraw,
+				)
+			}
 		}
 
 		iprev = iraw
@@ -69,6 +79,7 @@ func main() {
 	community := flag.String("c", "", "snmp community")
 	index := flag.String("i", "", "interface index")
 	discover := flag.Bool("d", false, "print interface discovery and exit")
+	verbose := flag.Bool("v", false, "verbose logging")
 	flag.Parse()
 
 	if *index == "" && *discover == false {
@@ -89,6 +100,6 @@ func main() {
 	if *discover {
 		discoverIndexes(s)
 	} else {
-		continuousPoll(s, index, host)
+		continuousPoll(s, index, host, verbose)
 	}
 }
