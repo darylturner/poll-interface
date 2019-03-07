@@ -26,7 +26,7 @@ func continuousPoll(s *gosnmp.GoSNMP, index *string, host *string, verbose *bool
 	oprev = 0
 
 	ticker := time.NewTicker(time.Second * 10)
-	for _ = range ticker.C {
+	for t := range ticker.C {
 		ret, err := s.GetMulti(oids)
 		if err != nil {
 			log.Fatal(err)
@@ -42,14 +42,16 @@ func continuousPoll(s *gosnmp.GoSNMP, index *string, host *string, verbose *bool
 
 			if !*verbose {
 				fmt.Printf(
-					"%v %v - in: %.3f mbps / out: %.3f mbps\n",
+					"%v - %v %v - in: %.3f mbps / out: %.3f mbps\n",
+					t.Format(time.RFC3339),
 					*host, ifname,
 					idelta*8/10/1e6,
 					odelta*8/10/1e6,
 				)
 			} else {
 				fmt.Printf(
-					"%v %v - in: %.3f mbps / out: %.3f mbps\niprev=%v, iraw=%v, oprev=%v, oraw=%v\n\n",
+					"%v - %v %v - in: %.3f mbps / out: %.3f mbps\niprev=%v, iraw=%v, oprev=%v, oraw=%v\n\n",
+					t.Format(time.RFC3339),
 					*host, ifname,
 					idelta*8/10/1e6,
 					odelta*8/10/1e6,
